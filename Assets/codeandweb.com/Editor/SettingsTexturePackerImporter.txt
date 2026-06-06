@@ -1,0 +1,11 @@
+version: 2
+tpsheetFileNames:
+- Assets/Atlas/HellDivers.tpsheet
+- Assets/Fonts/Arrow.tpsheet
+textureFileNames:
+- Assets/Atlas/HellDivers.png
+- Assets/Fonts/Arrow.png
+normalmapFileNames:
+- 
+- 
+enableDebugOutput: 0

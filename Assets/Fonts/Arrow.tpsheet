@@ -1,0 +1,23 @@
+#
+# Sprite sheet data for Unity.
+#
+# To import these sprites into your Unity project, download "TexturePackerImporter":
+# https://www.codeandweb.com/texturepacker/unity
+#
+# $TexturePacker:SmartUpdate:c84980d6cb0955f848ec31b430cf6708:6498dee75b24f5353e024db13a8542ec:87eb515d312d96b5aea9ad88df2db578$
+#
+:format=40300
+:texture=Arrow.png
+:size=376x188
+:pivotpoints=enabled
+:borders=disabled
+:alphahandling=ClearTransparentPixels
+
+down;0;95;88;93; -0.06818181818181818;0; 0;0;0;0
+downGray;94;97;88;91; -0.06818181818181818;0; 0;0;0;0
+left;188;100;92;88; -0.043478260869565216;-0.011363636363636465; 0;0;0;0
+leftGray;282;100;93;88; -0.03225806451612903;0; 0;0;0;0
+right;0;7;94;88; -0.02127659574468085;-0.011363636363636465; 0;0;0;0
+rightGray;94;7;93;88; -0.03225806451612903;0; 0;0;0;0
+up;188;4;88;91; -0.06818181818181818;0; 0;0;0;0
+upGray;282;4;88;91; -0.06818181818181818;0; 0;0;0;0

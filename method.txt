@@ -1,0 +1,230 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using UnityEngine;
+
+namespace Assets.Scripts
+{
+    public enum StrategyType
+    {
+        OrbitalPrecisionStrike,
+        OrbitalAirburstStrike,
+        Orbital380mmHEStrike
+    }
+
+    public class CommandHolder : MonoBehaviour
+    {
+        /// <summary>
+        /// 战略类型与对应输入指令的映射表
+        /// <para>Key: 策略枚举</para>
+        /// <para>Value: 对应的按键序列</para>
+        /// </summary>
+        public static readonly Dictionary<StrategyType, string> Commands = new()
+        {
+            { StrategyType.OrbitalPrecisionStrike, "DDW" },
+            { StrategyType.OrbitalAirburstStrike, "DDD" },
+            { StrategyType.Orbital380mmHEStrike, "DSWWASS" }
+        };
+
+        /// <summary>
+        /// 指令最长长度
+        /// </summary>
+        private const int MaxCommandLength = 10;
+        /// <summary>
+        /// 当前输入的指令序列
+        /// </summary>
+        private readonly StringBuilder cmd = new();
+        /// <summary>
+        /// 当前命中的指令序列
+        /// </summary>
+        private List<StrategyType> currentMatched = new();
+
+        /// <summary>
+        /// 最小匹配长度（要求至少推进到的长度）
+        /// </summary>
+        private int minMatchLength = 0; 
+        /// <summary>
+        /// 指示当前是否已经完全匹配了某条指令（即输入的末尾完整匹配了某条指令）
+        /// </summary>
+        private bool isfullMatchedStrategy = false;
+
+        /// <summary>
+        /// 指令被清空事件
+        /// </summary>
+        public event Action OnCmdCleared;
+        /// <summary>
+        /// 单字符输入事件
+        /// <para> 参数1:本次输入的字符 </para>
+        /// <para> 参数2:当前输入后，所有命中的战略类型列表 </para>
+        /// </summary>
+        public event Action<char, List<StrategyType>> OnCmdCharInput;
+        /// <summary>
+        /// 完整指令匹配事件
+        /// <para> 参数: 完整匹配的战略类型 </para>
+        /// </summary>
+        public event Action<StrategyType> OnCmdMatched;
+
+        private void Update()
+        {
+            // 如果本帧松开了 LeftControl，则清空当前输入并结束
+            if (Input.GetKeyUp(KeyCode.LeftControl))
+            {
+                cmd.Clear();
+                isfullMatchedStrategy = false; // 松开 LeftControl 后重置完全匹配状态
+                OnCmdCleared?.Invoke();
+                return;
+            }
+
+            // 如果当前已经完全匹配了某条指令，则不再接受新的输入
+            if (isfullMatchedStrategy)
+            {
+                return;
+            }
+
+            // 如果当前没有按住 LeftControl，则不允许继续输入并清空指令序列
+            if (!Input.GetKey(KeyCode.LeftControl))
+            {
+                if (cmd.Length > 0)
+                {
+                    cmd.Clear();
+                    OnCmdCleared?.Invoke();
+                }
+                return;
+            }
+
+            // 尝试获取本帧按下的 W/A/S/D 字符
+            // 如果没有按下目标按键，则直接返回
+            if (!TryGetInputChar(out var inputChar))
+            {
+                return;
+            }
+
+            cmd.Append(inputChar); // 将本次输入字符追加到命令缓冲区末尾
+            // 如果当前缓冲区长度超过最大允许长度，则移除最前面的多余字符，只保留末尾有效部分
+            if (cmd.Length > MaxCommandLength)
+            {
+                cmd.Remove(0, cmd.Length - MaxCommandLength);
+            }
+            CmdMatch(inputChar); // 对当前输入结果进行匹配
+        }
+
+        /// <summary>
+        /// 检测本帧是否按下了 W/A/S/D 中的某一个键。
+        /// 如果按下，则返回对应字符。
+        /// </summary>
+        private static bool TryGetInputChar(out char inputChar)
+        {
+            if (Input.GetKeyDown(KeyCode.W))
+            {
+                inputChar = 'W';
+                return true;
+            }
+
+            if (Input.GetKeyDown(KeyCode.A))
+            {
+                inputChar = 'A';
+                return true;
+            }
+
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                inputChar = 'S';
+                return true;
+            }
+
+            if (Input.GetKeyDown(KeyCode.D))
+            {
+                inputChar = 'D';
+                return true;
+            }
+
+            inputChar = default;
+            return false;
+        }
+
+        private static readonly StrategyType[] keys = Commands.Keys.ToArray();
+        private static readonly string[] values = Commands.Values.ToArray();
+        private static readonly List<int> indexsNeedToRemove = new();
+
+        /// <summary>
+        /// 对当前命令缓冲区进行匹配
+        /// </summary>
+        private void CmdMatch(char inputChar)
+        {
+            var current = cmd.ToString();
+
+            // 本次输入后，要求“至少推进到”的匹配长度：
+            var requiredMinLength = currentMatched.Count == 0 ? 1 : (minMatchLength + 1);
+
+            StrategyType? fullMatchedStrategy = null; // 当前输入完整命中的策略
+
+            if (currentMatched.Count == 0)
+            {
+                for (int i = 0; i < keys.Length; i++)
+                {
+                    var strategyType = keys[i];
+                    var command = values[i];
+
+                    if (EndsWithCommandPrefix(current, command, requiredMinLength))
+                    {
+                        currentMatched.Add(strategyType);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < currentMatched.Count; i++)
+                {
+                    var strategyType = currentMatched[i];
+                    var command = Commands[currentMatched[i]];
+
+                    // 如果当前输入的末尾完整匹配某条指令，既是“单字符匹配成功”，也是“完整匹配成功”
+                    if (current.EndsWith(command, StringComparison.Ordinal))
+                    {
+                        currentMatched.Clear();
+                        currentMatched.Add(strategyType);
+                        fullMatchedStrategy = strategyType;
+                        cmd.Clear(); // 完整匹配成功后，清空当前输入
+                        break;
+                    }
+
+                    // 若无法达到 requiredMinLength，则视为“本次没有推进”，应移除该策略
+                    if (!EndsWithCommandPrefix(current, command, requiredMinLength))
+                    {
+                        indexsNeedToRemove.Add(i);
+                    }
+                }
+            }
+
+            // 移除所有不再匹配的策略
+            for (int i = indexsNeedToRemove.Count - 1; !fullMatchedStrategy.HasValue && i >= 0; i--)
+            {
+                currentMatched.RemoveAt(indexsNeedToRemove[i]);
+            }
+            indexsNeedToRemove.Clear();
+
+
+            if (currentMatched.Count > 0)
+            {
+                // 记录当前至少已推进到 requiredMinLength
+                minMatchLength = requiredMinLength;
+            }
+            else
+            {
+                minMatchLength = 0;
+                OnCmdCleared?.Invoke(); // 没有任何匹配了，触发一次清空事件
+                return;
+            }
+
+            OnCmdCharInput?.Invoke(inputChar, currentMatched); // 触发一次单字符输入事件，把所有命中的、未命中的策略一起传出去
+
+            // 对完整匹配到的策略触发完整匹配事件
+            if (fullMatchedStrategy.HasValue)
+            {
+                isfullMatchedStrategy = true;
+                OnCmdMatched?.Invoke(fullMatchedStrategy.Value);
+                currentMatched.Clear(); // 触发完事件后，清空当前匹配列表，等待下一轮输入
+                minMatchLength = 0;     // 完整匹配结束后重置推进长度，避免影响下一轮
+            }
+        }

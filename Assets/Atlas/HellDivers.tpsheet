@@ -1,0 +1,27 @@
+#
+# Sprite sheet data for Unity.
+#
+# To import these sprites into your Unity project, download "TexturePackerImporter":
+# https://www.codeandweb.com/texturepacker/unity
+#
+# $TexturePacker:SmartUpdate:10eaedb006b8cc455b20a568fd2620b9:fbacbfa66d976acf3ebfb912ec76649a:518ae3c221990ac031d4b12a3323d7d7$
+#
+:format=40300
+:texture=HellDivers.png
+:size=1440x1080
+:pivotpoints=enabled
+:borders=disabled
+:alphahandling=ClearTransparentPixels
+
+06_clear;0;720;360;360; 0.5;0.5; 0;0;0;0
+07_clear;360;720;360;360; 0.5;0.5; 0;0;0;0
+10_clear;720;720;360;360; 0.5;0.5; 0;0;0;0
+11_clear;1080;720;360;360; 0.5;0.5; 0;0;0;0
+12_clear;0;360;360;360; 0.5;0.5; 0;0;0;0
+13_clear;360;360;360;360; 0.5;0.5; 0;0;0;0
+14_clear;720;360;360;360; 0.5;0.5; 0;0;0;0
+15_clear;1080;360;360;360; 0.5;0.5; 0;0;0;0
+16_clear;0;0;360;360; 0.5;0.5; 0;0;0;0
+17_clear;360;0;360;360; 0.5;0.5; 0;0;0;0
+18_clear;720;0;360;360; 0.5;0.5; 0;0;0;0
+19_clear;1080;0;360;360; 0.5;0.5; 0;0;0;0
